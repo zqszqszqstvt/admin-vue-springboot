@@ -91,7 +91,7 @@
         </div>
         <el-main>
           <div style="margin: 10px 0">
-            <el-input style="width: 200px" placeholder="请输入名称" suffix-icon="el-icon-search"></el-input><el-button style="margin-left: 5px" type="primary">搜索</el-button>
+            <el-input style="width: 200px" placeholder="请输入用户名" suffix-icon="el-icon-search" v-model="username"></el-input><el-button style="margin-left: 5px" type="primary" @click="load">搜索</el-button>
           </div>
           <div style="margin: 10px 0">
             <el-button type="primary">新增<i class="el-icon-circle-plus-outline"></i></el-button>
@@ -101,11 +101,17 @@
 
           </div>
           <el-table :data="tableData">
-            <el-table-column prop="date" label="日期" width="140">
+            <el-table-column prop="id" label="ID" width="80">
             </el-table-column>
-            <el-table-column prop="name" label="姓名" width="120">
+            <el-table-column prop="username" label="用户名" width="140">
+            </el-table-column>
+            <el-table-column prop="nickname" label="昵称" width="120">
             </el-table-column>
             <el-table-column prop="address" label="地址">
+            </el-table-column>
+            <el-table-column prop="email" label="邮箱" width="120">
+            </el-table-column>
+            <el-table-column prop="phone" label="手机号码" width="120">
             </el-table-column>
             <el-table-column label="操作">
               <template slot-scope="scope">
@@ -116,11 +122,13 @@
           </el-table>
           <div style="padding: 10px 0">
             <el-pagination
-
-                :page-sizes="[5, 10, 15, 20]"
-                :page-size="10"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="pageNum"
+                :page-sizes="[2, 5, 10, 15]"
+                :page-size="pageSize"
                 layout="total, sizes, prev, pager, next, jumper"
-                :total="400">
+                :total="total">
             </el-pagination>
           </div>
         </el-main>
@@ -132,29 +140,20 @@
 <script>
 export default {
   data() {
-    const item = {
-      date: '2016-05-02',
-      name: '王小虎',
-      address: '上海市普陀区金沙江路 1518 弄'
-    };
     return {
-      tableData: Array(10).fill(item),
+      tableData: [],
+      username: '',
+      total: 0,
+      pageNum: 1,
+      pageSize: 2,
       collapeseBtnClass: 'el-icon-s-fold',
       isCollapse: false,
       sideWidth: 200
     }
   },
   created() {
-    fetch("http://localhost:9090/user/page?pageNum=1&pageSize=2")
-        .then(res => res.json())
-        .then(data => {
-          // 处理数据
-          console.log(data);
-        })
-        .catch(error => {
-          // 处理错误
-          console.error(error);
-        });
+    this.load()
+
   },
   methods: {
     collapse() { //点击收起/展开菜单
@@ -166,6 +165,29 @@ export default {
         this.sideWidth = 200
         this.collapeseBtnClass = 'el-icon-s-fold'
       }
+    },
+    load() {
+      fetch("http://localhost:9090/user/page?pageNum="+this.pageNum+"&pageSize="+this.pageSize+"&username="+this.username)
+          .then(res => res.json())
+          .then(data => {
+            // 处理数据
+            console.log(data);
+            this.tableData = data.data
+            this.total = data.total
+          })
+          .catch(error => {
+            // 处理错误
+            console.error(error)
+          });
+    },
+    handleSizeChange(pageSize) {
+      this.pageSize=pageSize
+      this.load()
+
+    },
+    handleCurrentChange(pageNum) {
+      this.pageNum=pageNum
+      this.load()
     }
   }
 };

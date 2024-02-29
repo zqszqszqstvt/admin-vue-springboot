@@ -19,8 +19,8 @@ public class UserController {
     private UserService userService;
     // 新增和修改
     @PostMapping
-    public Integer save(@RequestBody User user) {
-        return userService.save(user);
+    public boolean save(@RequestBody User user) {
+        return userService.saveUser(user);
     }
     //查询所有用户
     @GetMapping
@@ -36,10 +36,13 @@ public class UserController {
 
     // 分页查询接口  @RequestParam接收?pageNum=1&Size=10
     @GetMapping("/page")
-    public Map<String, Object> findPage(@RequestParam Integer pageNum, Integer pageSize) {
+    public Map<String, Object> findPage(@RequestParam Integer pageNum,
+                                        @RequestParam Integer pageSize,
+                                        @RequestParam String username
+    ) {
         pageNum = (pageNum - 1) * pageSize;
-        List<User> data = userMapper.selectPage(pageNum, pageSize);
-        Integer total = userMapper.selectTotal();
+        List<User> data = userMapper.selectPage(pageNum, pageSize, username);
+        Integer total = userMapper.selectTotal(username);
         Map<String, Object> res = new HashMap<>();
         res.put("data", data);
         res.put("total", total);
