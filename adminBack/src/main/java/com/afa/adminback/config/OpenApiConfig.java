@@ -69,3 +69,4 @@ public class OpenApiConfig {
                 .version("0.0.1"));
     }
 }
+//访问网站http://localhost:9090/swagger-ui/index.html#/

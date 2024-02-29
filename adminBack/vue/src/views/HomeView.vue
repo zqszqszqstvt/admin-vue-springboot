@@ -91,10 +91,14 @@
         </div>
         <el-main>
           <div style="margin: 10px 0">
-            <el-input style="width: 200px" placeholder="请输入用户名" suffix-icon="el-icon-search" v-model="username"></el-input><el-button style="margin-left: 5px" type="primary" @click="load">搜索</el-button>
+            <el-input style="width: 200px;margin-right: 5px" placeholder="请输入用户名" suffix-icon="el-icon-search" v-model="username"></el-input>
+            <el-input style="width: 200px;margin-right: 5px" placeholder="请输入地址" suffix-icon="el-icon-office-building" v-model="address"></el-input>
+            <el-input style="width: 200px;margin-right: 5px" placeholder="请输入邮箱" suffix-icon="el-icon-message" v-model="email"></el-input>
+            <el-button style="" type="primary" @click="load">搜索</el-button>
+            <el-button style="" type="warning" @click="removeCondition">重置</el-button>
           </div>
           <div style="margin: 10px 0">
-            <el-button type="primary">新增<i class="el-icon-circle-plus-outline"></i></el-button>
+            <el-button type="primary">新增<i class="el-icon-circle-plus-outline" @click="add"></i></el-button>
             <el-button type="danger">批量删除<i class="el-icon-delete"></i></el-button>
             <el-button type="primary">导入<i class="el-icon-bottom-left"></i></el-button>
             <el-button type="primary">导出<i class="el-icon-top-right"></i></el-button>
@@ -131,6 +135,29 @@
                 :total="total">
             </el-pagination>
           </div>
+          <el-dialog title="用户信息" :visible.sync="dialogFormVisible" width="30%">
+            <el-form :model="form" label-width=120px>
+              <el-form-item label="用户名">
+                <el-input v-model="form.username" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="昵称">
+                <el-input v-model="form.nickname" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="邮箱">
+                <el-input v-model="form.email" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="地址">
+                <el-input v-model="form.address" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="电话">
+                <el-input v-model="form.phone" autocomplete="off"></el-input>
+              </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+              <el-button @click="dialogFormVisible = false">取 消</el-button>
+              <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+            </div>
+          </el-dialog>
         </el-main>
       </el-container>
     </el-container>
@@ -138,11 +165,16 @@
 </template>
 
 <script>
+import request from "@/utils/request";
 export default {
   data() {
     return {
       tableData: [],
       username: '',
+      address: '',
+      email: '',
+      form: {},
+      dialogFormVisible: false,
       total: 0,
       pageNum: 1,
       pageSize: 2,
@@ -167,18 +199,30 @@ export default {
       }
     },
     load() {
-      fetch("http://localhost:9090/user/page?pageNum="+this.pageNum+"&pageSize="+this.pageSize+"&username="+this.username)
-          .then(res => res.json())
-          .then(data => {
-            // 处理数据
-            console.log(data);
-            this.tableData = data.data
-            this.total = data.total
-          })
-          .catch(error => {
-            // 处理错误
-            console.error(error)
-          });
+      request.get("http://localhost:9090/user/page", {
+        params: {
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
+          username: this.username,
+          address: this.address,
+          email: this.email
+        }
+      }).then(res => {
+        console.log(res)
+        this.tableData = res.records
+        this.total = res.total
+      })
+
+    },
+    removeCondition() {
+      this.username = ''
+      this.address = ''
+      this.email = ''
+      this.load()
+    },
+    add() {
+      this.dialogFormVisible = true
+      this.form = {}
     },
     handleSizeChange(pageSize) {
       this.pageSize=pageSize
