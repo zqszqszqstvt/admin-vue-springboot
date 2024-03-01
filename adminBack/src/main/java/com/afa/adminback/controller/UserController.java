@@ -34,6 +34,11 @@ public class UserController {
         return userService.removeById(id);
     }
 
+    @PostMapping("/del/batch")
+    public boolean deleteBatch(@RequestBody List<Integer> ids) {
+        return userService.removeByIds(ids);
+    }
+
     // 分页查询接口  @RequestParam接收?pageNum=1&Size=10
 //    @GetMapping("/page")
 //    public Map<String, Object> findPage(@RequestParam Integer pageNum,
@@ -70,6 +75,7 @@ public class UserController {
         if(!"".equals(email)) {
             queryWrapper.like("email", email);
         }
+        queryWrapper.orderByDesc("id");
         return userService.page(page, queryWrapper);
     }
 }

@@ -99,12 +99,29 @@
           </div>
           <div style="margin: 10px 0">
             <el-button type="primary">新增<i class="el-icon-circle-plus-outline" @click="add"></i></el-button>
-            <el-button type="danger">批量删除<i class="el-icon-delete"></i></el-button>
-            <el-button type="primary">导入<i class="el-icon-bottom-left"></i></el-button>
+
+            <el-popconfirm
+                class="ml-5"
+                width="220"
+                confirm-button-text="是的"
+                cancel-button-text="不了，谢谢"
+                :icon="InfoFilled"
+                icon-color="#626AEF"
+                title="确认批量删除吗？"
+                @confirm="delBatch"
+            >
+              <template #reference>
+                <el-button type="danger">批量删除<i class="el-icon-delete"></i></el-button>
+              </template>
+            </el-popconfirm>
+
+
+            <el-button type="primary" class="ml-5">导入<i class="el-icon-bottom-left"></i></el-button>
             <el-button type="primary">导出<i class="el-icon-top-right"></i></el-button>
 
           </div>
-          <el-table :data="tableData">
+          <el-table :data="tableData" @selection-change="handleSelectionChange">
+            <el-table-column type="selection" width="55" />
             <el-table-column prop="id" label="ID" width="80">
             </el-table-column>
             <el-table-column prop="username" label="用户名" width="140">
@@ -119,8 +136,21 @@
             </el-table-column>
             <el-table-column label="操作">
               <template slot-scope="scope">
-                <el-button type="success">编辑<i class="el-icon-edit"></i></el-button>
-                <el-button type="danger">删除<i class="el-icon-delete"></i></el-button>
+                <el-button type="success" @click="handleEdit(scope.row)">编辑<i class="el-icon-edit"></i></el-button>
+                <el-popconfirm
+                    class="ml-5"
+                    width="220"
+                    confirm-button-text="是的"
+                    cancel-button-text="不了，谢谢"
+                    :icon="InfoFilled"
+                    icon-color="#626AEF"
+                    title="确认删除吗？"
+                    @confirm="handleDelete(scope.row.id)"
+                >
+                  <template #reference>
+                    <el-button type="danger">删除<i class="el-icon-delete"></i></el-button>
+                  </template>
+                </el-popconfirm>
               </template>
             </el-table-column>
           </el-table>
@@ -135,8 +165,8 @@
                 :total="total">
             </el-pagination>
           </div>
-          <el-dialog title="用户信息" :visible.sync="dialogFormVisible" width="30%">
-            <el-form :model="form" label-width=120px>
+          <el-dialog title="用户信息" :visible.sync="dialogFormVisible" width="25%">
+            <el-form :model="form" label-width=60px size="small">
               <el-form-item label="用户名">
                 <el-input v-model="form.username" autocomplete="off"></el-input>
               </el-form-item>
@@ -154,8 +184,8 @@
               </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
-              <el-button @click="dialogFormVisible = false">取 消</el-button>
-              <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+              <el-button @click="quitCommit">取 消</el-button>
+              <el-button type="primary" @click="commitIngo">确 定</el-button>
             </div>
           </el-dialog>
         </el-main>
@@ -170,6 +200,7 @@ export default {
   data() {
     return {
       tableData: [],
+      multipleSelection: [],
       username: '',
       address: '',
       email: '',
@@ -199,7 +230,7 @@ export default {
       }
     },
     load() {
-      request.get("http://localhost:9090/user/page", {
+      request.get("/user/page", {
         params: {
           pageNum: this.pageNum,
           pageSize: this.pageSize,
@@ -220,9 +251,57 @@ export default {
       this.email = ''
       this.load()
     },
+    // 多选操作
+    handleSelectionChange(val) {
+      this.multipleSelection = val
+    },
+    delBatch() {
+      let ids = this.multipleSelection.map(v => v.id)  // [{},{},{}] => [1,2,3]
+      request.post("/user/del/batch", ids).then(res => {
+        if(res) {
+          this.$message.success("批量删除成功！")
+          this.load()
+        } else {
+          this.$message.error("删除失败，请重试！")
+        }
+      })
+    },
+    // 新增事件
     add() {
       this.dialogFormVisible = true
       this.form = {}
+    },
+    // 编辑信息(row中包含了id，传给后端可以精确编辑信息和新增，表单未显示id)
+    handleEdit(row){
+      this.form = Object.assign({},row)
+      this.dialogFormVisible = true
+    },
+    // 删除信息
+    handleDelete(id) {
+      request.delete("/user/" + id).then(res => {
+        if(res) {
+          this.$message.success("删除成功！")
+          this.load()
+        } else {
+          this.$message.error("删除失败，请重试！")
+        }
+      })
+    },
+    // 取消弹窗
+    quitCommit() {
+      this.dialogFormVisible = false
+      this.load()
+    },
+    // 提交新用户表单
+    commitIngo() {
+      request.post("/user", this.form).then(res => {
+        if(res) {
+          this.$message.success("提交成功！")
+          this.quitCommit()
+        } else {
+          this.$message.error("提交失败，请重试！")
+        }
+      })
     },
     handleSizeChange(pageSize) {
       this.pageSize=pageSize
