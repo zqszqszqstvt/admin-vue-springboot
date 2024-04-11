@@ -17,7 +17,7 @@ public class Generator {
         generate();
     }
     private static void generate() {
-        FastAutoGenerator.create("jdbc:mysql://localhost:3306/warehouse?serverTimezone=GMT%2b8", "root", "123456")
+        FastAutoGenerator.create("jdbc:mysql://localhost:3306/warehouse?serverTimezone=GMT%2b8", "root", "123456789")
                 .globalConfig(builder -> {
                     builder.author("阿发") // 设置作者
                             //.enableSwagger() // 开启 swagger2 模式  使用的是swagger3 所以注释掉了
@@ -35,14 +35,20 @@ public class Generator {
                 }))
                 .packageConfig(builder -> {
                     builder.parent("com.afa.adminback") // 设置父包名
-                            .moduleName("") // 设置父包模块名
+                            .moduleName(null) // 设置父包模块名
                             .pathInfo(Collections.singletonMap(OutputFile.xml, "E:\\learn\\myproject\\admin-vue-springboot\\adminBack\\src\\main\\resources\\mapper\\")); // 设置mapperXml生成路径
                 })
                 .strategyConfig(builder -> {
                     builder.addInclude("sys_user") // 设置需要生成的表名
-                            .addTablePrefix("t_", "sys_"); // 设置过滤表前缀
+                            .addTablePrefix("t_", "sys_") // 设置过滤表前缀
+                            .entityBuilder().enableFileOverride() // 覆盖已生成的实体类文件
+                            .entityBuilder().enableLombok()
+                            .mapperBuilder().enableMapperAnnotation().build()
+                            .mapperBuilder().enableFileOverride() //覆盖生成的mapper文件
+                            .controllerBuilder().enableHyphenStyle().enableRestStyle()
+                            .controllerBuilder().enableFileOverride(); // 覆盖已生成的控制器文件
                 })
-                .templateEngine(new FreemarkerTemplateEngine()) // 使用Freemarker引擎模板，默认的是Velocity引擎模板
+                //.templateEngine(new FreemarkerTemplateEngine()) // 使用Freemarker引擎模板，默认的是Velocity引擎模板
                 .execute();
 
     }
